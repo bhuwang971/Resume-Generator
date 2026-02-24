@@ -1,0 +1,82 @@
+{
+  "status": "final",
+  "resume": {
+    "header": {
+      "name": "Bhuwan Gupta",
+      "phone": "(540) 877-8122",
+      "email": "bhuwang2000@gmail.com",
+      "linkedin": "linkedin.com/in/bhuwang6",
+      "github": "github.com/bhuwang971"
+    },
+    "professional_summary": "AI engineer with experience building retrieval, automation, and analytics workflows across Azure, Python, and full-stack web systems. Delivered production copilots, document processing pipelines, and experiment-driven product features with measurable efficiency gains. Strengths include prompt design, model evaluation, backend integration, and translating job-specific requirements into concise, impact-oriented resume content for target roles quickly.",
+    "technical_skills": [
+      "Languages: Python, SQL, JavaScript, TypeScript",
+      "AI/ML: Prompt Engineering, RAG, LLM Evaluation, Vector Search",
+      "Cloud: Azure OpenAI, Azure Functions, Azure Storage, Key Vault",
+      "Data: Pandas, NumPy, PySpark, ETL Pipelines",
+      "Backend: FastAPI, Flask, REST APIs, Authentication",
+      "Frontend: React, Streamlit, HTML, CSS",
+      "DevOps: GitHub Actions, Docker, CI/CD, Monitoring",
+      "Tools: Git, Postman, Jira, VS Code"
+    ],
+    "work_experience": {
+      "thorogood_bullets": [
+        "Built AI-assisted workflow reducing document triage time by 38% across daily operations.",
+        "Implemented retrieval pipeline with chunking and metadata filters to improve answer precision.",
+        "Designed prompt templates that increased structured output consistency for recruiter-facing summaries.",
+        "Integrated secure REST endpoints for resume analysis and downstream reporting automation.",
+        "Created evaluation rubric and test set to track hallucination rate reductions weekly.",
+        "Collaborated with product and hiring teams to align resume signals with JD priorities.",
+        "Automated validation checks for bullet length, section counts, and schema compliance."
+      ],
+      "gwu_gta_bullets": [
+        "Guided students on applied machine learning projects using reproducible Python experimentation workflows.",
+        "Developed grading scripts that cut rubric processing time while improving feedback consistency.",
+        "Supported lab sessions on data cleaning, feature engineering, and model performance interpretation.",
+        "Mentored teams on presentation structure and concise technical storytelling for final demos."
+      ]
+    },
+    "projects": {
+      "wtchtwr_bullets": [
+        "Built full-stack platform for watchlist tracking with personalized alerts and trend dashboards.",
+        "Implemented role-based authentication and secure API routes for user-specific portfolio data.",
+        "Added data ingestion jobs that normalized records from multiple sources every hour.",
+        "Created KPI visualizations to summarize engagement, retention, and conversion funnel performance.",
+        "Optimized query patterns, reducing dashboard load times during high traffic periods.",
+        "Instrumented logging and alerting to detect ingestion failures and retry automatically."
+      ],
+      "project2": {
+        "name": "Project2 Name",
+        "bullets": [
+          "Built resume keyword alignment checker that maps JD terms to candidate evidence sections.",
+          "Added rule-based scoring to prioritize missing competencies and recommend concise rewrites.",
+          "Exported results to JSON for downstream template rendering and audit traceability."
+        ]
+      },
+      "project3": {
+        "name": "Project3 Name",
+        "bullets": [
+          "Developed interview prep assistant generating targeted question sets from job requirements.",
+          "Implemented feedback loops to refine prompt quality and reduce repetitive outputs.",
+          "Deployed local-first interface supporting manual JSON import without external API dependencies."
+        ]
+      }
+    },
+    "education_lines": [
+      "The George Washington University - M.S. Data Science",
+      "VIT University - B.Tech. Computer Science"
+    ],
+    "jd_match_map": [
+      "RAG -> Summary / Skills / Thorogood 2",
+      "Prompt engineering -> Summary / Skills / Thorogood 3",
+      "Azure cloud -> Skills / Thorogood 4",
+      "API integration -> Skills / Thorogood 4",
+      "Experimentation -> Summary / Thorogood 5",
+      "Automation -> Summary / Thorogood 1",
+      "Analytics dashboards -> wtchtwr 4",
+      "Performance optimization -> wtchtwr 5",
+      "Evaluation metrics -> Thorogood 5 / Project2 2",
+      "Schema validation -> Thorogood 7 / Project2 3"
+    ]
+  }
+}
