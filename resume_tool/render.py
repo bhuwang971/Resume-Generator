@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from dataclasses import dataclass
 from pathlib import Path
 
 from docx import Document
@@ -12,6 +13,13 @@ from .schema import ResumeContent
 
 class LayoutValidationError(Exception):
     pass
+
+
+@dataclass(frozen=True)
+class RenderedResumePaths:
+    docx_path: Path | None = None
+    pdf_path: Path | None = None
+    temp_docx_path: Path | None = None
 
 
 def _get(items: list[str], idx: int) -> str:
@@ -264,14 +272,63 @@ def _enforce_layout_constraints(output_path: Path, prepped_template_path: Path) 
         raise LayoutValidationError("\n".join(errors))
 
 
-def render_resume_docx(
-    prepped_template_path: str | Path, resume: ResumeContent, output_path: str | Path
-) -> Path:
+def _convert_docx_to_pdf(docx_path: Path, pdf_path: Path) -> Path:
+    try:
+        import pythoncom
+        import win32com.client
+    except ImportError as exc:
+        raise LayoutValidationError(
+            "PDF export requires Microsoft Word automation support. "
+            "Install dependency with: pip install pywin32"
+        ) from exc
+
+    wd_format_pdf = 17
+
+    pythoncom.CoInitialize()
+    word = None
+    document = None
+    try:
+        word = win32com.client.DispatchEx("Word.Application")
+        word.Visible = False
+        word.DisplayAlerts = 0
+        document = word.Documents.Open(
+            str(docx_path.resolve()),
+            ConfirmConversions=False,
+            ReadOnly=True,
+            AddToRecentFiles=False,
+        )
+        pdf_path.parent.mkdir(parents=True, exist_ok=True)
+        document.SaveAs(str(pdf_path.resolve()), FileFormat=wd_format_pdf)
+    except Exception as exc:  # noqa: BLE001
+        raise LayoutValidationError(
+            "Failed to export PDF. Ensure Microsoft Word is installed."
+        ) from exc
+    finally:
+        if document is not None:
+            document.Close(False)
+        if word is not None:
+            word.Quit()
+        pythoncom.CoUninitialize()
+
+    return pdf_path
+
+
+def render_resume_outputs(
+    prepped_template_path: str | Path,
+    resume: ResumeContent,
+    output_path: str | Path,
+    export_docx: bool = True,
+    export_pdf: bool = False,
+) -> RenderedResumePaths:
+    if not export_docx and not export_pdf:
+        raise ValueError("At least one export format must be selected.")
+
     prepped_path = Path(prepped_template_path)
     output = Path(output_path)
     output.parent.mkdir(parents=True, exist_ok=True)
 
     temp_output = output.with_name(f"{output.stem}.tmp{output.suffix}")
+    pdf_output = output.with_suffix(".pdf")
 
     template = DocxTemplate(str(prepped_path))
     template.render(build_context(resume))
@@ -280,7 +337,43 @@ def render_resume_docx(
     _apply_skill_heading_format(temp_output, prepped_path, resume)
     _enforce_layout_constraints(temp_output, prepped_path)
 
-    if output.exists():
-        output.unlink()
-    temp_output.replace(output)
-    return output
+    docx_output: Path | None = None
+    if export_docx:
+        if output.exists():
+            output.unlink()
+        temp_output.replace(output)
+        docx_output = output
+
+    pdf_output_path: Path | None = None
+    if export_pdf:
+        source_docx_for_pdf = docx_output if docx_output is not None else temp_output
+        if pdf_output.exists():
+            pdf_output.unlink()
+        pdf_output_path = _convert_docx_to_pdf(source_docx_for_pdf, pdf_output)
+
+    if not export_docx and temp_output.exists():
+        temp_output.unlink()
+        temp_path: Path | None = None
+    else:
+        temp_path = temp_output if temp_output.exists() else None
+
+    return RenderedResumePaths(
+        docx_path=docx_output,
+        pdf_path=pdf_output_path,
+        temp_docx_path=temp_path,
+    )
+
+
+def render_resume_docx(
+    prepped_template_path: str | Path, resume: ResumeContent, output_path: str | Path
+) -> Path:
+    result = render_resume_outputs(
+        prepped_template_path=prepped_template_path,
+        resume=resume,
+        output_path=output_path,
+        export_docx=True,
+        export_pdf=False,
+    )
+    if result.docx_path is None:
+        raise LayoutValidationError("DOCX generation did not produce an output file.")
+    return result.docx_path

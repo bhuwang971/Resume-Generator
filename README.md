@@ -12,6 +12,7 @@ No cover letter features are included.
 - Validates incoming JSON (schema + status flow)
 - Accepts two JSON shapes (strict and nested variant)
 - Renders DOCX with `docxtpl` using placeholders
+- Exports Word, PDF, or both from the same validated render flow
 - Enforces final layout checks:
   - resume must stay on 1 page
   - mapped bullet paragraphs must be 1 line each
@@ -139,6 +140,7 @@ UI fields:
 - Output folder location
 - Company name (required)
 - Role name (optional with warning dialog)
+- Export format (`Word`, `PDF`, or `Both`)
 - Paste JSON from GPT
 - Validate and Generate Resume button
 
@@ -151,9 +153,11 @@ If continued with empty role, filename omits role segment:
 
 ## Output behavior
 
-- Existing file with same output name is overwritten.
-- Success message includes generated path.
-- Button opens generated DOCX directly.
+- Existing `.docx` and `.pdf` files with the same output name are overwritten.
+- Success message includes the generated output path or paths.
+- Button opens the first generated file.
+- PDF is created only after the DOCX passes layout validation.
+- If validation fails in PDF-only mode, no final PDF is created; only the temporary DOCX remains for inspection.
 - Generation fails only when:
   - schema/status parsing fails
   - `status="questions"` flow blocks generation

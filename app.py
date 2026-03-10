@@ -6,7 +6,7 @@ from pathlib import Path
 
 import streamlit as st
 
-from resume_tool.render import render_resume_docx
+from resume_tool.render import render_resume_outputs
 from resume_tool.utils import build_resume_filename, ensure_directory
 from resume_tool.validate import validate_json_text
 
@@ -55,6 +55,17 @@ def _open_path(path: Path) -> None:
     os.startfile(str(path.resolve()))
 
 
+def _selected_export_formats() -> tuple[bool, bool]:
+    export_format = st.session_state.get("export_format", "Word")
+    if export_format == "Both":
+        return True, True
+    if export_format == "PDF":
+        return False, True
+    if export_format == "Word":
+        return True, False
+    raise ValueError("Select a valid export option: Word, PDF, or Both.")
+
+
 def _show_additional_json_info(additional_info: dict) -> None:
     if not additional_info:
         return
@@ -99,6 +110,8 @@ def main() -> None:
         st.session_state["attempt_generate"] = False
     if "role_empty_confirmed" not in st.session_state:
         st.session_state["role_empty_confirmed"] = False
+    if "last_output_files" not in st.session_state:
+        st.session_state["last_output_files"] = []
 
     st.subheader("Template (Backend)")
     st.write(f"Base template: `{BASE_TEMPLATE_PATH}`")
@@ -125,11 +138,14 @@ def main() -> None:
     with col_role:
         role_name = st.text_input("Role name")
 
+    st.subheader("Export Format")
+    st.radio("Choose export format", options=["Word", "PDF", "Both"], key="export_format")
+
     raw_json = st.text_area("Paste JSON from GPT", height=320)
 
     if st.button("Validate & Generate Resume"):
         st.session_state["attempt_generate"] = True
-        st.session_state["last_output_file"] = st.session_state.get("last_output_file", "")
+        st.session_state["last_output_files"] = st.session_state.get("last_output_files", [])
 
     if st.session_state["attempt_generate"]:
         missing_fields: list[str] = []
@@ -137,6 +153,13 @@ def main() -> None:
             missing_fields.append("Company name")
         if missing_fields:
             st.error(f"Please input the field: {', '.join(missing_fields)}")
+            st.session_state["attempt_generate"] = False
+            st.stop()
+
+        try:
+            export_docx, export_pdf = _selected_export_formats()
+        except ValueError as exc:
+            st.error(str(exc))
             st.session_state["attempt_generate"] = False
             st.stop()
 
@@ -182,23 +205,35 @@ def main() -> None:
         output_path = output_dir / filename
         if output_path.exists():
             st.info(f"Existing file will be overwritten: {output_path}")
+        if export_pdf and output_path.with_suffix(".pdf").exists():
+            st.info(f"Existing file will be overwritten: {output_path.with_suffix('.pdf')}")
 
         try:
-            render_resume_docx(PREPPED_TEMPLATE_PATH, resume, output_path)
+            rendered_paths = render_resume_outputs(
+                PREPPED_TEMPLATE_PATH,
+                resume,
+                output_path,
+                export_docx=export_docx,
+                export_pdf=export_pdf,
+            )
         except Exception as exc:  # noqa: BLE001
-            st.error(f"DOCX generation failed: {exc}")
+            st.error(f"Resume generation failed: {exc}")
             st.session_state["attempt_generate"] = False
             st.session_state["role_empty_confirmed"] = False
             st.stop()
 
-        st.success(f"Resume generated successfully: {output_path}")
-        st.session_state["last_output_file"] = str(output_path)
+        generated_paths = [
+            path for path in (rendered_paths.docx_path, rendered_paths.pdf_path) if path is not None
+        ]
+        success_paths = "\n".join(f"- {path}" for path in generated_paths)
+        st.success(f"Resume generated successfully:\n{success_paths}")
+        st.session_state["last_output_files"] = [str(path) for path in generated_paths]
         st.session_state["attempt_generate"] = False
         st.session_state["role_empty_confirmed"] = False
 
-    last_output_file_raw = st.session_state.get("last_output_file", "")
-    if last_output_file_raw:
-        output_file_path = Path(last_output_file_raw)
+    last_output_files_raw = st.session_state.get("last_output_files", [])
+    if last_output_files_raw:
+        output_file_path = Path(last_output_files_raw[0])
         if st.button("Open generated resume"):
             try:
                 _open_path(output_file_path)
