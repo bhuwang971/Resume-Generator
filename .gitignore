@@ -6,3 +6,6 @@ __pycache__/
 .env
 resume_tool/templates/*.docx
 resume_tool/templates/mapping.json
+examples/*.docx
+examples/*.pdf
+python-*.exe
