@@ -21,8 +21,8 @@ KNOWN_RESUME_KEYS = {
     "education_lines",
     "jd_match_map",
 }
-KNOWN_WORK_KEYS = {"thorogood_bullets", "gwu_gta_bullets"}
-KNOWN_PROJECTS_KEYS = {"wtchtwr_bullets", "project2", "project3"}
+KNOWN_WORK_KEYS = {"ilink_bullets", "thorogood_bullets", "gwu_gta_bullets"}
+KNOWN_PROJECTS_KEYS = {"wtchtwr_bullets", "project2"}
 KNOWN_PROJECT_ENTRY_KEYS = {"name", "bullets"}
 ALLOWED_STATUS = {"final", "questions"}
 
@@ -200,6 +200,19 @@ def _canonicalize_resume(resume: dict[str, Any]) -> tuple[dict[str, Any], dict[s
         normalized_work: dict[str, Any] = {}
         work_extras: dict[str, Any] = {}
 
+        ilink_bullets = work.get("ilink_bullets")
+        if isinstance(ilink_bullets, list):
+            normalized_work["ilink_bullets"] = ilink_bullets
+        else:
+            ilink_obj = work.get("ilink")
+            if isinstance(ilink_obj, dict):
+                nested_bullets = ilink_obj.get("bullets")
+                if isinstance(nested_bullets, list):
+                    normalized_work["ilink_bullets"] = nested_bullets
+                ilink_meta = {k: v for k, v in ilink_obj.items() if k != "bullets"}
+                if ilink_meta:
+                    work_extras["ilink_meta"] = ilink_meta
+
         thorogood_bullets = work.get("thorogood_bullets")
         if isinstance(thorogood_bullets, list):
             normalized_work["thorogood_bullets"] = thorogood_bullets
@@ -231,7 +244,15 @@ def _canonicalize_resume(resume: dict[str, Any]) -> tuple[dict[str, Any], dict[s
         passthrough_work_extras = {
             k: v
             for k, v in work.items()
-            if k not in {"thorogood_bullets", "gwu_gta_bullets", "thorogood", "gwu_gta"}
+            if k
+            not in {
+                "ilink_bullets",
+                "thorogood_bullets",
+                "gwu_gta_bullets",
+                "ilink",
+                "thorogood",
+                "gwu_gta",
+            }
         }
         if passthrough_work_extras:
             work_extras["unmapped_fields"] = passthrough_work_extras
@@ -258,7 +279,7 @@ def _canonicalize_resume(resume: dict[str, Any]) -> tuple[dict[str, Any], dict[s
                 if wtchtwr_meta:
                     projects_extras["wtchtwr_meta"] = wtchtwr_meta
 
-        for entry_key in ("project2", "project3"):
+        for entry_key in ("project2",):
             entry_val = projects.get(entry_key)
             if isinstance(entry_val, dict):
                 entry_extras = {
@@ -275,7 +296,7 @@ def _canonicalize_resume(resume: dict[str, Any]) -> tuple[dict[str, Any], dict[s
         passthrough_project_extras = {
             k: v
             for k, v in projects.items()
-            if k not in {"wtchtwr_bullets", "wtchtwr", "project2", "project3"}
+            if k not in {"wtchtwr_bullets", "wtchtwr", "project2"}
         }
         if passthrough_project_extras:
             projects_extras["unmapped_fields"] = passthrough_project_extras

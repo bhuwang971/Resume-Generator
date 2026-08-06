@@ -30,11 +30,14 @@ def build_resume_preview(resume: ResumeContent) -> str:
     lines.append("")
 
     lines.append("WORK EXPERIENCE")
-    lines.append("Thorogood")
-    for item in resume.work_experience.thorogood_bullets:
+    lines.append("iLink Digital")
+    for item in resume.work_experience.ilink_bullets:
         lines.append(f"{bullet} {item.strip()}")
     lines.append("GWU GTA")
     for item in resume.work_experience.gwu_gta_bullets:
+        lines.append(f"{bullet} {item.strip()}")
+    lines.append("Thorogood")
+    for item in resume.work_experience.thorogood_bullets:
         lines.append(f"{bullet} {item.strip()}")
     lines.append("")
 
@@ -45,10 +48,6 @@ def build_resume_preview(resume: ResumeContent) -> str:
 
     lines.append(resume.projects.project2.name.strip())
     for item in resume.projects.project2.bullets:
-        lines.append(f"{bullet} {item.strip()}")
-
-    lines.append(resume.projects.project3.name.strip())
-    for item in resume.projects.project3.bullets:
         lines.append(f"{bullet} {item.strip()}")
     lines.append("")
 

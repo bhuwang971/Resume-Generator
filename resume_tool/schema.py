@@ -18,6 +18,7 @@ class Header(BaseModel):
 class WorkExperience(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
+    ilink_bullets: list[str] = Field(default_factory=list)
     thorogood_bullets: list[str] = Field(default_factory=list)
     gwu_gta_bullets: list[str] = Field(default_factory=list)
 
@@ -34,7 +35,6 @@ class Projects(BaseModel):
 
     wtchtwr_bullets: list[str] = Field(default_factory=list)
     project2: ProjectEntry
-    project3: ProjectEntry
 
 
 class ResumeContent(BaseModel):

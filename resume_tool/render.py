@@ -32,7 +32,6 @@ def build_context(resume: ResumeContent) -> dict[str, str]:
     context: dict[str, str] = {
         "summary": resume.professional_summary.strip(),
         "project2_name": resume.projects.project2.name.strip(),
-        "project3_name": resume.projects.project3.name.strip(),
         "header_name": resume.header.name.strip(),
         "header_phone": resume.header.phone.strip(),
         "header_email": resume.header.email.strip(),
@@ -43,12 +42,15 @@ def build_context(resume: ResumeContent) -> dict[str, str]:
     for idx in range(8):
         context[f"skills_{idx + 1}"] = _get(resume.technical_skills, idx)
 
+    for idx in range(6):
+        context[f"ilink_{idx + 1}"] = _get(resume.work_experience.ilink_bullets, idx)
+
     for idx in range(7):
         context[f"thorogood_{idx + 1}"] = _get(
             resume.work_experience.thorogood_bullets, idx
         )
 
-    for idx in range(4):
+    for idx in range(3):
         context[f"gta_{idx + 1}"] = _get(resume.work_experience.gwu_gta_bullets, idx)
 
     for idx in range(6):
@@ -56,9 +58,6 @@ def build_context(resume: ResumeContent) -> dict[str, str]:
 
     for idx in range(3):
         context[f"project2_{idx + 1}"] = _get(resume.projects.project2.bullets, idx)
-
-    for idx in range(3):
-        context[f"project3_{idx + 1}"] = _get(resume.projects.project3.bullets, idx)
 
     context["education_1"] = _get(resume.education_lines, 0)
     context["education_2"] = _get(resume.education_lines, 1)
@@ -250,11 +249,11 @@ def _analyze_layout_with_word(
 def _enforce_layout_constraints(output_path: Path, prepped_template_path: Path) -> None:
     placeholders = _load_placeholder_indices(prepped_template_path)
     bullet_indices = (
-        _optional_indices(placeholders, "thorogood", 7)
-        + _optional_indices(placeholders, "gta", 4)
+        _optional_indices(placeholders, "ilink", 6)
+        + _optional_indices(placeholders, "thorogood", 7)
+        + _optional_indices(placeholders, "gta", 3)
         + _optional_indices(placeholders, "wtchtwr", 6)
         + _optional_indices(placeholders, "project2", 3)
-        + _optional_indices(placeholders, "project3", 3)
     )
 
     page_count, bullet_violations = _analyze_layout_with_word(output_path, bullet_indices)

@@ -11,7 +11,7 @@ from docx.text.paragraph import Paragraph
 SECTION_HEADINGS = (
     "PROFESSIONAL SUMMARY",
     "TECHNICAL SKILLS",
-    "WORK EXPERIENCE",
+    "EXPERIENCE",
     "PROJECTS",
     "EDUCATION",
 )
@@ -69,13 +69,12 @@ def empty_mapping_template() -> dict[str, Any]:
     return {
         "summary": 0,
         "skills": [0] * 8,
+        "ilink": [0] * 6,
         "thorogood": [0] * 7,
-        "gta": [0] * 4,
+        "gta": [0] * 3,
         "wtchtwr": [0] * 6,
         "project2_name": 0,
         "project2": [0] * 3,
-        "project3_name": 0,
-        "project3": [0] * 3,
     }
 
 
@@ -104,13 +103,12 @@ def validate_mapping(mapping: dict[str, Any], paragraph_count: int) -> dict[str,
     required_keys = {
         "summary",
         "skills",
+        "ilink",
         "thorogood",
         "gta",
         "wtchtwr",
         "project2_name",
         "project2",
-        "project3_name",
-        "project3",
     }
 
     missing = required_keys - set(mapping.keys())
@@ -121,22 +119,21 @@ def validate_mapping(mapping: dict[str, Any], paragraph_count: int) -> dict[str,
     normalized = {
         "summary": _validate_int(mapping["summary"], "summary"),
         "skills": _validate_int_list(mapping["skills"], "skills", 8),
+        "ilink": _validate_int_list(mapping["ilink"], "ilink", 6),
         "thorogood": _validate_int_list(mapping["thorogood"], "thorogood", 7),
-        "gta": _validate_int_list(mapping["gta"], "gta", 4),
+        "gta": _validate_int_list(mapping["gta"], "gta", 3),
         "wtchtwr": _validate_int_list(mapping["wtchtwr"], "wtchtwr", 6),
         "project2_name": _validate_int(mapping["project2_name"], "project2_name"),
         "project2": _validate_int_list(mapping["project2"], "project2", 3),
-        "project3_name": _validate_int(mapping["project3_name"], "project3_name"),
-        "project3": _validate_int_list(mapping["project3"], "project3", 3),
     }
 
-    all_indices = [normalized["summary"], normalized["project2_name"], normalized["project3_name"]]
+    all_indices = [normalized["summary"], normalized["project2_name"]]
     all_indices.extend(normalized["skills"])
+    all_indices.extend(normalized["ilink"])
     all_indices.extend(normalized["thorogood"])
     all_indices.extend(normalized["gta"])
     all_indices.extend(normalized["wtchtwr"])
     all_indices.extend(normalized["project2"])
-    all_indices.extend(normalized["project3"])
 
     for idx in all_indices:
         if idx < 0 or idx >= paragraph_count:
@@ -166,7 +163,7 @@ def auto_detect_mapping(template_path: str | Path) -> dict[str, Any]:
     skills_pool = _get_non_empty_indices(
         paragraphs,
         heading_idx["TECHNICAL SKILLS"] + 1,
-        heading_idx["WORK EXPERIENCE"],
+        heading_idx["EXPERIENCE"],
     )
     if len(skills_pool) < 8:
         raise TemplatePrepError(
@@ -175,13 +172,13 @@ def auto_detect_mapping(template_path: str | Path) -> dict[str, Any]:
 
     work_pool = _get_non_empty_indices(
         paragraphs,
-        heading_idx["WORK EXPERIENCE"] + 1,
+        heading_idx["EXPERIENCE"] + 1,
         heading_idx["PROJECTS"],
     )
     work_bullets = [idx for idx in work_pool if _is_bullet_paragraph(paragraphs[idx])]
-    if len(work_bullets) < 11:
+    if len(work_bullets) < 16:
         raise TemplatePrepError(
-            "WORK EXPERIENCE must contain at least 11 detectable bullets (7 Thorogood + 4 GWU GTA). "
+            "EXPERIENCE must contain at least 16 detectable bullets (6 iLink + 3 GWU GTA + 7 Thorogood). "
             f"Found {len(work_bullets)}."
         )
 
@@ -191,9 +188,9 @@ def auto_detect_mapping(template_path: str | Path) -> dict[str, Any]:
         heading_idx["EDUCATION"],
     )
     project_bullets = [idx for idx in projects_pool if _is_bullet_paragraph(paragraphs[idx])]
-    if len(project_bullets) < 12:
+    if len(project_bullets) < 9:
         raise TemplatePrepError(
-            "PROJECTS must contain at least 12 detectable bullets (6 + 3 + 3). "
+            "PROJECTS must contain at least 9 detectable bullets (6 + 3). "
             f"Found {len(project_bullets)}."
         )
 
@@ -202,21 +199,20 @@ def auto_detect_mapping(template_path: str | Path) -> dict[str, Any]:
         for idx in projects_pool
         if _clean(paragraphs[idx].text) and not _is_bullet_paragraph(paragraphs[idx])
     ]
-    if len(project_name_lines) < 3:
+    if len(project_name_lines) < 2:
         raise TemplatePrepError(
-            "Could not find at least 3 project title lines in PROJECTS section."
+            "Could not find at least 2 project title lines in PROJECTS section."
         )
 
     mapping = {
         "summary": summary_pool[0],
         "skills": skills_pool[:8],
-        "thorogood": work_bullets[:7],
-        "gta": work_bullets[7:11],
+        "ilink": work_bullets[:6],
+        "gta": work_bullets[6:9],
+        "thorogood": work_bullets[9:16],
         "wtchtwr": project_bullets[:6],
         "project2_name": project_name_lines[1],
         "project2": project_bullets[6:9],
-        "project3_name": project_name_lines[2],
-        "project3": project_bullets[9:12],
     }
 
     return validate_mapping(mapping, len(paragraphs))
@@ -239,6 +235,9 @@ def _build_replacement_pairs(mapping: dict[str, Any]) -> list[tuple[int, str]]:
     for idx, paragraph_idx in enumerate(mapping["skills"], start=1):
         pairs.append((paragraph_idx, f"{{{{skills_{idx}}}}}"))
 
+    for idx, paragraph_idx in enumerate(mapping["ilink"], start=1):
+        pairs.append((paragraph_idx, f"{{{{ilink_{idx}}}}}"))
+
     for idx, paragraph_idx in enumerate(mapping["thorogood"], start=1):
         pairs.append((paragraph_idx, f"{{{{thorogood_{idx}}}}}"))
 
@@ -251,10 +250,6 @@ def _build_replacement_pairs(mapping: dict[str, Any]) -> list[tuple[int, str]]:
     pairs.append((mapping["project2_name"], "{{project2_name}}"))
     for idx, paragraph_idx in enumerate(mapping["project2"], start=1):
         pairs.append((paragraph_idx, f"{{{{project2_{idx}}}}}"))
-
-    pairs.append((mapping["project3_name"], "{{project3_name}}"))
-    for idx, paragraph_idx in enumerate(mapping["project3"], start=1):
-        pairs.append((paragraph_idx, f"{{{{project3_{idx}}}}}"))
 
     return pairs
 

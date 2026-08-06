@@ -119,14 +119,13 @@ The prepped template must contain these placeholders exactly:
 - Skills:
   - `{{skills_1}}` to `{{skills_8}}`
 - Work Experience:
+  - `{{ilink_1}}` to `{{ilink_6}}`
   - `{{thorogood_1}}` to `{{thorogood_7}}`
-  - `{{gta_1}}` to `{{gta_4}}`
+  - `{{gta_1}}` to `{{gta_3}}`
 - Projects:
   - `{{wtchtwr_1}}` to `{{wtchtwr_6}}`
   - `{{project2_name}}`
   - `{{project2_1}}` to `{{project2_3}}`
-  - `{{project3_name}}`
-  - `{{project3_1}}` to `{{project3_3}}`
 
 Each placeholder should be the only text in that target paragraph.
 
@@ -184,13 +183,13 @@ The validator supports both formats below.
     "professional_summary": "....",
     "technical_skills": ["...", "...", "...", "...", "...", "...", "...", "..."],
     "work_experience": {
+      "ilink_bullets": ["...", "...", "...", "...", "...", "..."],
       "thorogood_bullets": ["...", "...", "...", "...", "...", "...", "..."],
-      "gwu_gta_bullets": ["...", "...", "...", "..."]
+      "gwu_gta_bullets": ["...", "...", "..."]
     },
     "projects": {
       "wtchtwr_bullets": ["...", "...", "...", "...", "...", "..."],
-      "project2": { "name": "...", "bullets": ["...", "...", "..."] },
-      "project3": { "name": "...", "bullets": ["...", "...", "..."] }
+      "project2": { "name": "...", "bullets": ["...", "...", "..."] }
     },
     "education_lines": ["...", "..."],
     "jd_match_map": ["...", "..."]
@@ -202,6 +201,7 @@ The validator supports both formats below.
 
 Also accepted:
 
+- `work_experience.ilink.bullets`
 - `work_experience.thorogood.bullets`
 - `work_experience.gwu_gta.bullets`
 - `projects.wtchtwr.bullets`
@@ -216,7 +216,7 @@ You can customize safely:
 - Summary text
 - Skills lines
 - Bullet text
-- Project 2 and Project 3 names
+- Project 2 name
 - `jd_match_map` size/content
 - Additional fields (for example `resume_text`, `sources`) for UI viewing
 
