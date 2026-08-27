@@ -1,10 +1,10 @@
-"""Resume DOCX tailoring local tool."""
+"""Deterministic JSON-to-resume generation tools."""
 
 __all__ = [
-    "schema",
-    "validate",
-    "template_prep",
     "render",
-    "preview",
+    "schema",
+    "template_selector",
     "utils",
+    "validate",
+    "workflow",
 ]

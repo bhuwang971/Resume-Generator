@@ -1,45 +1,62 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 import json
-import re
 from pathlib import Path
+import re
 
 
-WINDOWS_INVALID_CHARS = r'[<>:"/\\|?*]'
+WORD_PATTERN = re.compile(r"[A-Za-z0-9][A-Za-z0-9'/-]*")
 
 
 def word_count(text: str) -> int:
-    return len(re.findall(r"[A-Za-z0-9][A-Za-z0-9'/-]*", text or ""))
+    return len(WORD_PATTERN.findall(text or ""))
 
 
-def ensure_directory(path: Path) -> Path:
-    path.mkdir(parents=True, exist_ok=True)
-    return path
-
-
-def sanitize_filename_part(value: str, fallback: str) -> str:
-    cleaned = re.sub(WINDOWS_INVALID_CHARS, "", (value or "").strip())
-    cleaned = re.sub(r"\s+", " ", cleaned)
-    cleaned = cleaned.strip(". ")
+def sanitize_path_part(value: str, fallback: str) -> str:
+    cleaned = re.sub(r'[<>:"/\\|?*]', "", (value or "").strip())
+    cleaned = re.sub(r"\s+", " ", cleaned).strip(". ")
     return cleaned or fallback
 
 
-def build_resume_filename(name: str, company: str, role: str) -> str:
-    safe_name = sanitize_filename_part(name, "Candidate")
-    safe_company = sanitize_filename_part(company, "Company")
-    safe_role = sanitize_filename_part(role, "")
-
-    parts = ["Resume", safe_name, safe_company]
-    if safe_role:
-        parts.append(safe_role)
-    return f"{' - '.join(parts)}.docx"
+@dataclass(frozen=True)
+class VersionedOutput:
+    folder: Path
+    version: int
+    docx_path: Path
+    pdf_path: Path
 
 
-def pretty_json(data: dict) -> str:
-    return json.dumps(data, indent=2, ensure_ascii=False)
+def next_versioned_output(
+    output_root: str | Path, company: str, role: str,
+) -> VersionedOutput:
+    folder = (
+        Path(output_root)
+        / sanitize_path_part(company, "Unknown Company")
+        / sanitize_path_part(role, "Unknown Role")
+    )
+    folder.mkdir(parents=True, exist_ok=True)
+    versions = {
+        int(match.group(1))
+        for path in folder.glob("resume_v*.*")
+        if (match := re.fullmatch(r"resume_v(\d+)\.(?:docx|pdf)", path.name, re.I))
+    }
+    version = max(versions, default=0) + 1
+    return VersionedOutput(
+        folder=folder,
+        version=version,
+        docx_path=folder / f"resume_v{version}.docx",
+        pdf_path=folder / f"resume_v{version}.pdf",
+    )
 
 
-def load_text_file(path: Path, fallback: str = "") -> str:
-    if path.exists():
-        return path.read_text(encoding="utf-8")
-    return fallback
+def pretty_json(value: dict) -> str:
+    return json.dumps(value, ensure_ascii=False, indent=2)
+
+
+def is_within(path: str | Path, root: str | Path) -> bool:
+    try:
+        Path(path).resolve().relative_to(Path(root).resolve())
+    except ValueError:
+        return False
+    return True
